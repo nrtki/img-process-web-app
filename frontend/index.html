@@ -1,95 +1,64 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>画像処理テスト</title>
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .container { display: flex; gap: 20px; margin-top: 20px; }
-        .image-box { flex: 1; border: 2px dashed #ccc; padding: 10px; text-align: center; min-height: 200px; }
-        img { max-width: 100%; max-height: 300px; display: block; margin: 0 auto; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
-        button:hover { background-color: #0056b3; }
-        /* 読み込み中のスタイル */
-        .loading { opacity: 0.5; pointer-events: none; }
-    </style>
+    <title>画像処理スタジオ</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
-    <h1>画像加工デモアプリ</h1>
-    <p>Python(FastAPI) × Pillow による画像処理システム</p>
-    <select id="modeSelect">
-        <option value="gray">グレースケール</option>
-        <option value="edge">輪郭抽出（エッジ検出）</option>
-        <option value="blur">ぼかし処理</option>
-    </select>
-    
-    <input type="file" id="fileInput" accept="image/*">
-    <button onclick="uploadImage()" id="processBtn">加工実行</button>
+    <header>
+        <h1>Image Process Studio</h1>
+        <p class="subtitle">Python (FastAPI) × Pillow による高度な画像処理デモ</p>
+    </header>
 
-    <div class="container">
-        <div class="image-box">
-            <h3>元画像</h3>
-            <img id="originalImage" style="display:none;">
+    <main>
+        <div class="controls">
+            <div class="file-input-wrapper">
+                <button class="btn btn-outline">
+                    📁 画像を選択
+                    <input type="file" id="fileInput" accept="image/*">
+                </button>
+                <span id="fileName" style="margin-left: 10px; color: #666; font-size: 0.9rem;">未選択</span>
+            </div>
+
+            <div class="select-wrapper">
+                <select id="modeSelect">
+                    <option value="gray">グレースケール変換</option>
+                    <option value="edge">輪郭抽出 (Edge Detection)</option>
+                    <option value="blur">ぼかし処理 (Gaussian Blur)</option>
+                </select>
+            </div>
+
+            <button id="processBtn" class="btn">
+                <span class="spinner"></span>
+                <span class="btn-text">加工実行</span>
+            </button>
         </div>
-        <div class="image-box">
-            <h3>加工後（サーバー処理結果）</h3>
-            <img id="processedImage" style="display:none;">
+
+        <div class="preview-area">
+            <div class="image-card" id="originalCard">
+                <h3>Original Image</h3>
+                <div id="originalPlaceholder" class="placeholder-text">
+                    画像を選択すると<br>ここにプレビューが表示されます
+                </div>
+                <img id="originalImage" style="display:none;" alt="元画像">
+            </div>
+
+            <div class="image-card" id="processedCard">
+                <h3>Processed Image</h3>
+                <div id="processedPlaceholder" class="placeholder-text">
+                    加工ボタンを押すと<br>ここに結果が表示されます
+                </div>
+                <img id="processedImage" style="display:none;" alt="加工後画像">
+            </div>
         </div>
-    </div>
+    </main>
 
-    <script>
-        async function uploadImage() {
-            const fileInput = document.getElementById('fileInput');
-            const file = fileInput.files[0];
-            if (!file) {
-                alert("画像を選択してください");
-                return;
-            }
-
-            // UIの表示切り替え（元画像表示）
-            const originalImg = document.getElementById('originalImage');
-            originalImg.src = URL.createObjectURL(file);
-            originalImg.style.display = 'block';
-
-            // ボタンをローディング状態にする
-            const btn = document.getElementById('processBtn');
-            btn.innerText = "処理中...";
-            btn.classList.add("loading");
-
-            // サーバーに送信するデータを作成
-            const formData = new FormData();
-            formData.append("file", file);
-
-            const mode = document.getElementById('modeSelect').value;
-
-            const url = `http://localhost:8001/process/${mode}`;
-
-            try {
-                // APIを叩く (ローカルサーバーへ送信)
-                const response = await fetch(url, {
-                    method: "POST",
-                    body: formData
-                });
-
-                if (response.ok) {
-                    // レスポンス（画像Blob）を取得して表示
-                    const blob = await response.blob();
-                    const processedImg = document.getElementById('processedImage');
-                    processedImg.src = URL.createObjectURL(blob);
-                    processedImg.style.display = 'block';
-                } else {
-                    alert("エラーが発生しました: " + response.statusText);
-                }
-            } catch (error) {
-                console.error(error);
-                alert("サーバーとの通信に失敗しました。バックエンドが起動しているか確認してください。");
-            } finally {
-                // ボタンを元に戻す
-                btn.innerText = "加工実行";
-                btn.classList.remove("loading");
-            }
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
+
 </html>

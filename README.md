@@ -26,7 +26,7 @@ source .venv/bin/activate
 ```
 ### 3. ライブラリのインストール
 ```bash
-pip install -r requirements.txt
+pip install -r requirement.txt
 ```
 ### 4. backendサーバ起動
 ```bash
@@ -34,5 +34,5 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8001
 ```
 ### 5.frontend用のサーバーを起動
 ```bash
-python -m http.server 5500
+python -m http.server :5500
 ```

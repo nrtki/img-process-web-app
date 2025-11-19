@@ -1,8 +1,9 @@
-from fastapi import FastAPI, UploadFile, File,APIRouter
+from fastapi import FastAPI, UploadFile, File, APIRouter
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, ImageFilter
 import io
+from typing import Callable
 
 app = FastAPI()
 
@@ -22,42 +23,43 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 router = APIRouter(prefix="/process")
-app.include_router(router)
+
+async def process_image(file: UploadFile, process_func: Callable[[Image.Image], Image.Image]) -> StreamingResponse:
+    """画像処理の共通ロジック"""
+    image_data = await file.read()
+    image = Image.open(io.BytesIO(image_data))
+    
+    # RGBAやパレットモード(P)などの場合、フィルタ処理でエラーになることがあるためRGBに変換
+    if image.mode not in ("RGB", "L"):
+        image = image.convert("RGB")
+    
+    # 画像処理を実行
+    processed_image = process_func(image)
+    
+    buf = io.BytesIO()
+    processed_image.save(buf, format="PNG")
+    buf.seek(0)
+    return StreamingResponse(buf, media_type="image/png")
+
 @app.get("/")
 def read_root():
     return {"message": "画像加工APIサーバーは正常に稼働しています！"}
 
-
-@app.post("/process/gray")
+@router.post("/gray")
 async def create_gray_image(file: UploadFile = File(...)):
     """グレースケール画像を生成します"""
-    image_data = await file.read()
-    image = Image.open(io.BytesIO(image_data))
-    processed_image = image.convert("L")
-    buf = io.BytesIO()
-    processed_image.save(buf, format="PNG")
-    buf.seek(0)
-    return StreamingResponse(buf, media_type="image/png")
+    return await process_image(file, lambda img: img.convert("L"))
 
-@app.post("/process/edge")
+@router.post("/edge")
 async def create_edge_image(file: UploadFile = File(...)):
     """画像の輪郭を抽出します"""
-    image_data = await file.read()
-    image = Image.open(io.BytesIO(image_data))
-    processed_image = image.filter(ImageFilter.FIND_EDGES)
-    buf = io.BytesIO()
-    processed_image.save(buf, format="PNG")
-    buf.seek(0)
-    return StreamingResponse(buf, media_type="image/png")
+    return await process_image(file, lambda img: img.filter(ImageFilter.FIND_EDGES))
 
-@app.post("/process/blur")
-async def create_edge_image(file: UploadFile = File(...)):
-    """画像の輪郭を抽出します"""
-    image_data = await file.read()
-    image = Image.open(io.BytesIO(image_data))
-    processed_image = image.filter(ImageFilter.GaussianBlur(radius=5))
-    buf = io.BytesIO()
-    processed_image.save(buf, format="PNG")
-    buf.seek(0)
-    return StreamingResponse(buf, media_type="image/png")
+@router.post("/blur")
+async def create_blur_image(file: UploadFile = File(...)):
+    """画像をぼかします"""
+    return await process_image(file, lambda img: img.filter(ImageFilter.GaussianBlur(radius=5)))
+
+app.include_router(router)
