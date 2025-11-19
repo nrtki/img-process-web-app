@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIエンジニア転職用ポートフォリオ</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { display: flex; gap: 20px; margin-top: 20px; }
+        .image-box { flex: 1; border: 2px dashed #ccc; padding: 10px; text-align: center; min-height: 200px; }
+        img { max-width: 100%; max-height: 300px; display: block; margin: 0 auto; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+        /* 読み込み中のスタイル */
+        .loading { opacity: 0.5; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <h1>画像加工デモアプリ</h1>
+    <p>Python(FastAPI) × Pillow による画像処理システム</p>
+    
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="uploadImage()" id="processBtn">加工実行</button>
+
+    <div class="container">
+        <div class="image-box">
+            <h3>元画像</h3>
+            <img id="originalImage" style="display:none;">
+        </div>
+        <div class="image-box">
+            <h3>加工後（サーバー処理結果）</h3>
+            <img id="processedImage" style="display:none;">
+        </div>
+    </div>
+
+    <script>
+        async function uploadImage() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("画像を選択してください");
+                return;
+            }
+
+            // UIの表示切り替え（元画像表示）
+            const originalImg = document.getElementById('originalImage');
+            originalImg.src = URL.createObjectURL(file);
+            originalImg.style.display = 'block';
+
+            // ボタンをローディング状態にする
+            const btn = document.getElementById('processBtn');
+            btn.innerText = "処理中...";
+            btn.classList.add("loading");
+
+            // サーバーに送信するデータを作成
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                // APIを叩く (ローカルサーバーへ送信)
+                const response = await fetch("http://localhost:8001/process/", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // レスポンス（画像Blob）を取得して表示
+                    const blob = await response.blob();
+                    const processedImg = document.getElementById('processedImage');
+                    processedImg.src = URL.createObjectURL(blob);
+                    processedImg.style.display = 'block';
+                } else {
+                    alert("エラーが発生しました: " + response.statusText);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("サーバーとの通信に失敗しました。バックエンドが起動しているか確認してください。");
+            } finally {
+                // ボタンを元に戻す
+                btn.innerText = "加工実行";
+                btn.classList.remove("loading");
+            }
+        }
+    </script>
+</body>
+</html>
