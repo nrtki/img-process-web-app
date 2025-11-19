@@ -11,18 +11,28 @@
 ```bash
 git clone https://github.com/nrtki/image-processing-app.git
 cd image-processing-app
-# 仮想環境の作成と有効化 (Optional)
+```
+### 2. 仮想環境の作成と有効化 (Optional)
+```bash
 python -m venv .venv
-# Windows (PowerShell) の場合:
+```
+#### Windows (PowerShell) の場合:
+```bash
 .venv\Scripts\activate
-# Mac/Linux の場合:
+```
+#### Mac/Linux の場合:
+```bash
 source .venv/bin/activate
-
-# ライブラリのインストール
+```
+### 3. ライブラリのインストール
+```bash
 pip install -r requirements.txt
-
-# backendサーバ起動
+```
+### 4. backendサーバ起動
+```bash
 uvicorn main:app --reload --host 0.0.0.0 --port 8001
-# frontend用のサーバーを起動
+```
+### 5.frontend用のサーバーを起動
+```bash
 python -m http.server 5500
 ```
