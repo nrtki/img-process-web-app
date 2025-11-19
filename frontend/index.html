@@ -18,6 +18,11 @@
 <body>
     <h1>画像加工デモアプリ</h1>
     <p>Python(FastAPI) × Pillow による画像処理システム</p>
+    <select id="modeSelect">
+        <option value="gray">グレースケール</option>
+        <option value="edge">輪郭抽出（エッジ検出）</option>
+        <option value="blur">ぼかし処理</option>
+    </select>
     
     <input type="file" id="fileInput" accept="image/*">
     <button onclick="uploadImage()" id="processBtn">加工実行</button>
@@ -56,9 +61,13 @@
             const formData = new FormData();
             formData.append("file", file);
 
+            const mode = document.getElementById('modeSelect').value;
+
+            const url = `http://localhost:8001/process/${mode}`;
+
             try {
                 // APIを叩く (ローカルサーバーへ送信)
-                const response = await fetch("http://localhost:8001/process/", {
+                const response = await fetch(url, {
                     method: "POST",
                     body: formData
                 });

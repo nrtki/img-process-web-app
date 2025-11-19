@@ -1,7 +1,7 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File,APIRouter
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from PIL import Image
+from PIL import Image, ImageFilter
 import io
 
 app = FastAPI()
@@ -22,29 +22,42 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
+router = APIRouter(prefix="/process")
+app.include_router(router)
 @app.get("/")
 def read_root():
     return {"message": "画像加工APIサーバーは正常に稼働しています！"}
 
-@app.post("/process/")
-async def process_image(file: UploadFile = File(...)):
-    """
-    アップロードされた画像をグレースケールに変換して返すAPI
-    """
-    # 1. アップロードされたファイルを読み込む
+
+@app.post("/process/gray")
+async def create_gray_image(file: UploadFile = File(...)):
+    """グレースケール画像を生成します"""
     image_data = await file.read()
     image = Image.open(io.BytesIO(image_data))
-
-    # 2. 画像処理（ここでOpenCVなどを使えば複雑な加工も可能）
-    # 今回はシンプルに「白黒（グレースケール）」変換
     processed_image = image.convert("L")
-
-    # 3. 加工した画像をメモリ上のバッファに保存（ディスクには保存しない）
     buf = io.BytesIO()
     processed_image.save(buf, format="PNG")
     buf.seek(0)
+    return StreamingResponse(buf, media_type="image/png")
 
-    # 4. 画像データとしてレスポンスを返す
+@app.post("/process/edge")
+async def create_edge_image(file: UploadFile = File(...)):
+    """画像の輪郭を抽出します"""
+    image_data = await file.read()
+    image = Image.open(io.BytesIO(image_data))
+    processed_image = image.filter(ImageFilter.FIND_EDGES)
+    buf = io.BytesIO()
+    processed_image.save(buf, format="PNG")
+    buf.seek(0)
+    return StreamingResponse(buf, media_type="image/png")
+
+@app.post("/process/blur")
+async def create_edge_image(file: UploadFile = File(...)):
+    """画像の輪郭を抽出します"""
+    image_data = await file.read()
+    image = Image.open(io.BytesIO(image_data))
+    processed_image = image.filter(ImageFilter.GaussianBlur(radius=5))
+    buf = io.BytesIO()
+    processed_image.save(buf, format="PNG")
+    buf.seek(0)
     return StreamingResponse(buf, media_type="image/png")
