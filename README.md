@@ -9,7 +9,7 @@
 リポジトリをクローンし、プロジェクトディレクトリへ移動します。
 
 ```bash
-git clone [https://github.com/あなたのユーザー名/image-processing-app.git](https://github.com/あなたのユーザー名/image-processing-app.git)
+git clone https://github.com/nrtki/image-processing-app.git
 cd image-processing-app
 # 仮想環境の作成と有効化 (Optional)
 python -m venv .venv
